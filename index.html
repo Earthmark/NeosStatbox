@@ -1,0 +1,105 @@
+<html>
+
+<head>
+    <style type="text/css">
+        #graph-container {
+            height: 100%;
+            width: 100%;
+            margin: auto;
+        }
+
+        #file-selector {
+            position: fixed;
+            margin: 24;
+            z-index: 1;
+        }
+
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file" id="file-selector" accept=".json">
+    <div id="graph-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/sigma.min.js"
+        integrity="sha256-ii2D7w2jthCadZtIl2OjRn2vu1iEtGWcOrmd+UOZorc=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/plugins/sigma.parsers.json.min.js"
+        integrity="sha256-4EvXKAACf2UPb+npycjxOlBwf8QqjL2k+zggPOF+tE4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/plugins/sigma.plugins.animate.min.js"
+        integrity="sha256-D65uSr6qp3GRxCPrwPhBUaXXFsKoFqBtyIwxyspHrho=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/plugins/sigma.layout.noverlap.min.js"
+        integrity="sha256-v8Yw4oU0hwLlTu4QhmJLxKSDkmXFubs1lYHavjYB2dg=" crossorigin="anonymous"></script>
+    <script>
+        const fileSelector = document.getElementById('file-selector');
+        fileSelector.addEventListener('change', changeEvent => {
+
+            const reader = new FileReader();
+            reader.addEventListener('load', loadEvent => {
+                const raw = JSON.parse(loadEvent.target.result);
+
+                const recordColor = '#000000';
+                const assetColor = '#FF00FF';
+
+                // fold result into a node tree.
+                const nodes = {};
+                const edges = [];
+                var edgeId = 0;
+                raw.forEach(record => {
+                    nodes[record.id] =
+                    {
+                        id: record.id,
+                        label: record.name,
+                        color: recordColor,
+                        x: 0,
+                        y: 0,
+                        size: 10
+                    };
+
+                    record.neosDBmanifest.forEach(asset => {
+                        if (nodes[asset.hash] === undefined) {
+                            nodes[asset.hash] = {
+                                id: asset.hash,
+                                label: asset.bytes + " bytes",
+                                color: assetColor,
+                                x: 0,
+                                y: 0,
+                                size: Math.log(asset.bytes)
+                            };
+                        }
+                        edges.push({
+                            id: edgeId++,
+                            source: record.id,
+                            target: asset.hash
+                        });
+                    });
+                });
+
+                const graph = {
+                    nodes: Object.values(nodes),
+                    edges: edges
+                };
+
+                const s = new sigma({
+                    container: 'graph-container',
+                    settings: {
+                        defaultNodeColor: '#ec5148'
+                    },
+                    graph: graph
+                });
+
+                s.configNoverlap({});
+                s.startNoverlap();
+
+                // If we get to this point, we loaded the graph successfully.
+                // Disable the selector as a signal for that.
+                fileSelector.style.display = "none";
+            });
+            reader.readAsText(changeEvent.target.files[0]);
+        });
+
+    </script>
+</body>
+
+</html>

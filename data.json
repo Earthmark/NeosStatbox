@@ -1,0 +1,86 @@
+[
+  {
+    "id": "T-1",
+    "name": "Thing 1",
+    "recordType": "world",
+    "path": null,
+    "neosDBmanifest": [
+      {
+        "hash": "aaaaaa",
+        "bytes": 3846
+      },
+      {
+        "hash": "bbbbbbb",
+        "bytes": 10202
+      },
+      {
+        "hash": "ccccccc",
+        "bytes": 10379
+      },
+      {
+        "hash": "ddddddddd",
+        "bytes": 41690
+      }
+    ]
+  },
+  {
+    "id": "T-2",
+    "name": "Thing 2",
+    "recordType": "world",
+    "path": null,
+    "neosDBmanifest": [
+      {
+        "hash": "aaaaaa",
+        "bytes": 3846
+      },
+      {
+        "hash": "bbbbbbb",
+        "bytes": 10202
+      },
+      {
+        "hash": "zzzzz",
+        "bytes": 1235
+      },
+      {
+        "hash": "gggg",
+        "bytes": 4562456247
+      }
+    ]
+  },
+  {
+    "id": "T-3",
+    "name": "Thing 3",
+    "recordType": "item",
+    "path": "Super/Great/Things",
+    "neosDBmanifest": [
+      {
+        "hash": "zzzzz",
+        "bytes": 1235
+      },
+      {
+        "hash": "ddddddddd",
+        "bytes": 41690
+      },
+      {
+        "hash": "bbbbbbb",
+        "bytes": 10202
+      },
+      {
+        "hash": "jjjj",
+        "bytes": 8465
+      }
+    ]
+  },
+  {
+    "id": "T-4",
+    "name": "Thing 4",
+    "recordType": "item",
+    "path": "Super/Great/Things",
+    "neosDBmanifest": [
+      {
+        "hash": "kkkkk",
+        "bytes": 84202
+      }
+    ]
+  }
+]
