@@ -31,6 +31,10 @@
         integrity="sha256-D65uSr6qp3GRxCPrwPhBUaXXFsKoFqBtyIwxyspHrho=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/plugins/sigma.layout.noverlap.min.js"
         integrity="sha256-v8Yw4oU0hwLlTu4QhmJLxKSDkmXFubs1lYHavjYB2dg=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/plugins/sigma.plugins.dragNodes.min.js"
+        integrity="sha256-GsCqmXw81h5Ng+assIZ4VhMuj6k28nUGboGTL/MHaQU=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@1.2.1/build/plugins/sigma.layout.forceAtlas2.min.js"
+        integrity="sha256-yuvmGZKRyQEMbH7+Spnf0tIikmGAnN5mmbdqfwzBVnc=" crossorigin="anonymous"></script>
     <script>
         const fileSelector = document.getElementById('file-selector');
         fileSelector.addEventListener('change', changeEvent => {
@@ -40,6 +44,7 @@
                 const raw = JSON.parse(loadEvent.target.result);
 
                 const recordColor = '#000000';
+                const worldColor = '#006600';
                 const assetColor = '#FF00FF';
 
                 // fold result into a node tree.
@@ -50,8 +55,8 @@
                     nodes[record.id] =
                     {
                         id: record.id,
-                        label: record.name,
-                        color: recordColor,
+                        label: (record.path ? record.path + "/" : "") + record.name,
+                        color: record.type === "world" ? worldColor : recordColor,
                         x: 0,
                         y: 0,
                         size: 10
@@ -61,7 +66,7 @@
                         if (nodes[asset.hash] === undefined) {
                             nodes[asset.hash] = {
                                 id: asset.hash,
-                                label: asset.bytes + " bytes",
+                                label: `${asset.hash}${"\n"}${asset.bytes} bytes`,
                                 color: assetColor,
                                 x: 0,
                                 y: 0,
@@ -89,8 +94,20 @@
                     graph: graph
                 });
 
-                s.configNoverlap({});
+                s.configNoverlap({
+                });
                 s.startNoverlap();
+
+                sigma.plugins.dragNodes(s, s.renderers[0]);
+                s.startForceAtlas2({
+                    worker: true,
+                    barnesHutOptimize: true,
+                    slowDown: 500,
+                });
+
+                //setTimeout(() => {
+                //    s.killForceAtlas2();
+                //}, 2000)
 
                 // If we get to this point, we loaded the graph successfully.
                 // Disable the selector as a signal for that.
