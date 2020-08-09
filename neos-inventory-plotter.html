@@ -1,0 +1,147 @@
+<html>
+
+<head>
+    <title>Neos Inventory Plotter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style type="text/css">
+        #graph-container {
+            width: 100vw;
+            height: 100vh;
+            margin: auto;
+        }
+
+        #input-area {
+            position: fixed;
+            margin: 12;
+            padding: 6;
+            z-index: 1;
+            background-color: cornsilk;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
+    <script src="https://unpkg.com/3d-force-graph"></script>
+</head>
+
+<body>
+    <div id="input-area">
+        <p id="file-selector-section">
+            <input type="file" id="file-selector" accept=".json">
+        </p>
+        The document consumed by this page can be generated with the /requestRecordUsageJSON command.
+        <br>
+        The asset IDs shown in these graphs should not be shared or posted to others,
+        <br>
+        they are only shown on mouse-over, and the structure
+        <br>
+        of the graph itself can be used to figure out why some assets are persisted.
+        <br>
+        <input type="checkbox" id="show-labels"> Show Labels (Uncheck this if others can see the display, as it hides
+        the sensitive bits)
+    </div>
+    <div id="graph-container"></div>
+    <script>
+        const showLabels = document.getElementById('show-labels');
+        const showMime = document.getElementById('show-mime');
+        const disableDrag = document.getElementById('disable-drag');
+
+        const fileSelector = document.getElementById('file-selector');
+        fileSelector.addEventListener('change', changeEvent => {
+
+            const reader = new FileReader();
+            reader.addEventListener('load', loadEvent => {
+                const raw = JSON.parse(loadEvent.target.result);
+
+                // These are the 5 font assets in the core font chain, they connect to anything with text.
+                const coreFontList = {
+                    "bcda0bcc22bab28ea4fedae800bfbf9ec76d71cc3b9f851779a35b7e438a839d": true,
+                    "415dc6290378574135b64c808dc640c1df7531973290c4970c51fdeb849cb0c5": true,
+                    "c801b8d2522fb554678f17f4597158b1af3f9be3abd6ce35d5a3112a81e2bf39": true,
+                    "4cac521169034ddd416c6deffe2eb16234863761837df677a910697ec5babd25": true,
+                    "23e7ad7cb0a5a4cf75e07c9e0848b1eb06bba15e8fa9b8cb0579fc823c532927": true
+                };
+
+                // fold result into a node tree.
+                const nodes = {};
+                const links = [];
+                raw.forEach(record => {
+                    nodes[record.id] =
+                    {
+                        id: record.id,
+                        label: (record.path ? record.path + "\\" : "") + record.name,
+                        type: record.recordType,
+                        x: 0,
+                        y: 0,
+                        size: 5
+                    };
+
+                    record.neosDBmanifest.forEach(asset => {
+                        // Omit the core font list, they connect to anything with text.
+                        // Really you'll never get rid of these, and they make the graph
+                        // more difficult to understand.
+                        if (coreFontList[asset.hash]) {
+                            return;
+                        }
+
+                        if (nodes[asset.hash] === undefined) {
+                            nodes[asset.hash] = {
+                                id: asset.hash,
+                                label: `${asset.hash} ${asset.bytes} bytes`,
+                                type: "asset",
+                                x: 0,
+                                y: 0,
+                                size: asset.bytes > 0 ? Math.log(asset.bytes) : 1,
+                            };
+                        }
+                        links.push({
+                            source: record.id,
+                            target: asset.hash
+                        });
+                    });
+                });
+
+                const graph = {
+                    nodes: Object.values(nodes),
+                    links: links
+                };
+                console.log(graph);
+
+                function mapColor(type) {
+                    switch (type) {
+                        case "asset":
+                            return "f5b84e";
+                        case "world":
+                            return "4e59f5";
+                        case "texture":
+                            return "c64ef5";
+                        case "object":
+                            return "f54e4e";
+                    }
+                    return "ffffff";
+                }
+
+                const myGraph = ForceGraph3D({
+                });
+                const graphInstance = myGraph(document.getElementById('graph-container'))
+                    .graphData(graph).nodeLabel(n => {
+                        if (!showLabels.checked) {
+                            return;
+                        }
+                        return n.label;
+                    }).nodeAutoColorBy(n => mapColor(n.type))
+                    .nodeVal(n => n.size);
+
+                // If we get to this point, we loaded the graph successfully.
+                // Disable the selector as a signal for that.
+                document.getElementById('file-selector-section').style.display = 'none';
+            });
+            reader.readAsText(changeEvent.target.files[0]);
+        });
+
+    </script>
+</body>
+
+</html>
