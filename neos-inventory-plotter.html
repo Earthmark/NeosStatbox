@@ -149,7 +149,8 @@
                         }
                         return n.label;
                     }).nodeColor(n => mapColor(n.type))
-                    .nodeVal(n => n.size);
+                    .nodeVal(n => n.size)
+                    .enableNodeDrag(false);
 
                 // If we get to this point, we loaded the graph successfully.
                 // Disable the selector as a signal for that.
