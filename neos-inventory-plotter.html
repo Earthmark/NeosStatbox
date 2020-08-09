@@ -32,8 +32,16 @@
         <p id="file-selector-section">
             <input type="file" id="file-selector" accept=".json">
         </p>
-        <button type="button" id="collapse-button">Toggle Description</button>
+        <div>
+            <button type="button" id="collapse-button">Toggle Description</button>
+        </div>
         <div id="collapse-area">
+            <p>
+                The simulation will be slow to start, after a short time of it back solving node positions
+                the graph will lock and then it should be highly responsive.
+                Feel free to provide feedback or view the source <a href="https://github.com/Earthmark/NeosStatbox" target="_blank">here</a>,
+                if performance issues persist please log an issue.
+            </p>
             <p>
                 The document consumed by this page can be generated with the /requestRecordUsageJSON command.
                 The asset IDs shown in these graphs should not be shared or posted to others,
@@ -55,7 +63,6 @@
                 area.style.display = area.style.display !== "none" ? "none" : "block";
             });
         </script>
-        <br>
         <input type="checkbox" id="show-labels"> Show Labels (Uncheck this if others can see the display, as it hides
         the sensitive bits)
     </div>
