@@ -3,8 +3,8 @@
 <head>
     <style type="text/css">
         #graph-container {
-            width: 100%;
-            height: auto;
+            width: 100vw;
+            height: 100vh;
             margin: auto;
         }
 
@@ -58,11 +58,10 @@
                                 type: "asset",
                                 x: 0,
                                 y: 0,
-                                size: Math.log(asset.bytes)
+                                size: asset.bytes > 0 ? Math.log(asset.bytes) : 0,
                             };
                         }
                         edges.push({
-                            value: 2,
                             source: record.id,
                             target: asset.hash
                         });
@@ -81,11 +80,11 @@
                     .force("x", d3.forceX())
                     .force("y", d3.forceY());
 
-                const height = 2000;
-                const width = 2000;
+                const height = window.innerHeight * 2;
+                const width = window.innerWidth * 2;
                 const svg = d3.create("svg")
                     .attr("viewBox", [-width / 2, -height / 2, width, height])
-                    .attr("preserveAspectRatio", "none");
+                    .attr("preserveAspectRatio", "xMidYMid meet");
 
                 const edge = svg.append("g")
                     .attr("stroke", "#999")
@@ -93,7 +92,7 @@
                     .selectAll("line")
                     .data(graph.edges)
                     .join("line")
-                    .attr("stroke-width", d => d < 1 ? 1 : Math.sqrt(d.value));
+                    .attr("stroke-width", 0.5);
 
                 function dragStarted(d) {
                     if (!d3.event.active) simulation.alphaTarget(0.3).restart();
@@ -125,12 +124,19 @@
                     .selectAll("circle")
                     .data(graph.nodes)
                     .join("circle")
-                    .attr("r", d => d.size)
-                    .attr("fill", d => scale(d.type))
+                    .attr("r", d => d.size == 0 ? 5 : d.size)
+                    .attr("fill", d => scale(d.size == 0 ? "empty" : d.type))
                     .call(drag);
 
+                svg.call(d3.zoom().extent([[0,0], [10000, 10000]]).scaleExtent([1,8]).on("zoom", zoomed));
+
+                function zoomed() {
+                    edge.attr("transform", d3.event.transform);
+                    node.attr("transform", d3.event.transform);
+                }
+
                 node.append("title")
-                    .text(d => d.id);
+                    .text(d => d.label);
 
                 simulation.on("tick", () => {
                     edge
