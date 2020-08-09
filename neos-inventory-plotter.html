@@ -131,7 +131,7 @@
                             return;
                         }
                         return n.label;
-                    }).nodeAutoColorBy(n => mapColor(n.type))
+                    }).nodeColor(n => mapColor(n.type))
                     .nodeVal(n => n.size);
 
                 // If we get to this point, we loaded the graph successfully.
