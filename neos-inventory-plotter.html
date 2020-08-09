@@ -15,7 +15,8 @@
             margin: 12;
             padding: 6;
             z-index: 1;
-            background-color: cornsilk;
+            background-color: lightgray;
+            max-width: 700px;
         }
 
         body {
@@ -31,13 +32,29 @@
         <p id="file-selector-section">
             <input type="file" id="file-selector" accept=".json">
         </p>
-        The document consumed by this page can be generated with the /requestRecordUsageJSON command.
-        <br>
-        The asset IDs shown in these graphs should not be shared or posted to others,
-        <br>
-        they are only shown on mouse-over, and the structure
-        <br>
-        of the graph itself can be used to figure out why some assets are persisted.
+        <button type="button" id="collapse-button">Toggle Description</button>
+        <div id="collapse-area">
+            <p>
+                The document consumed by this page can be generated with the /requestRecordUsageJSON command.
+                The asset IDs shown in these graphs should not be shared or posted to others,
+                they are only shown on mouse-over, and the structure
+                of the graph itself can be used to figure out why some assets are persisted.
+            </p>
+            <p>
+                Yellow nodes in this page are assets counted towards your storage cap,
+                each node is only counted once no matter how many other nodes connect to it.
+                Yellow nodes that have a lot of edges means that node is important to many objects,
+                and that is a good thing as it is still only counted once towards the storage quota.
+                Nodes with few edges (such as the probable outer sphere of nodes) are good candidates to remove,
+                as removing one item from your inventory will release all assets linked to that node.
+            </p>
+        </div>
+        <script>
+            document.getElementById('collapse-button').addEventListener('click', () => {
+                const area = document.getElementById('collapse-area');
+                area.style.display = area.style.display !== "none" ? "none" : "block";
+            });
+        </script>
         <br>
         <input type="checkbox" id="show-labels"> Show Labels (Uncheck this if others can see the display, as it hides
         the sensitive bits)
