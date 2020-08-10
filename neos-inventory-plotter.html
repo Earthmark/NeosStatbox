@@ -35,6 +35,12 @@
 <body>
     <div id="input-area">
         <p id="file-selector-section">
+            <select id="control-type">
+                <option value="trackball">Trackball</option>
+                <option value="orbit">Orbit</option>
+                <option value="fly">Fly</option>
+            </select> The controls to use in 3D.
+            <br>
             <input type="checkbox" id="3d" checked="false"> Use 3D instead of 2D rendering.
             <br>
             <input type="checkbox" id="allow-dragging" checked="false"> Allow Dragging (this may be expensive).
@@ -179,10 +185,11 @@
                 }
 
                 const graph = {
-                    nodes: Object.values(nodes),
+                    nodes: nodes,
                     links: links
                 };
                 console.log(graph);
+                console.log(`Total of ${graph.nodes.reduce((c, n) => c + (n.size ? n.size : 0), 0)} bytes accounted for`)
 
                 function mapColor(type) {
                     switch (type) {
@@ -200,8 +207,10 @@
 
                 var logVal = parseFloat(document.getElementById('log-power').value);
 
+                const controlType = document.getElementById('control-type');
+
                 const myGraph = (document.getElementById('3d').checked ? ForceGraph3D : ForceGraph)({
-                    controlType: "fly"
+                    controlType: controlType.options[controlType.selectedIndex].value
                 });
                 const graphInstance = myGraph(document.getElementById('graph-container'))
                     .graphData(graph)
