@@ -22,14 +22,21 @@
         body {
             margin: 0;
             font-family: 'Roboto', sans-serif;
+            background-color: #000011;
         }
     </style>
-    <script src="https://unpkg.com/3d-force-graph"></script>
+    <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.66.6/dist/3d-force-graph.min.js"
+        integrity="sha256-mPYIN3z7FgzLzvsTfCOeGjry8/LlPRZaew4NzxHzh7E=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.19/lodash.min.js"
+        integrity="sha256-Jvh9+A4HNbbWsWl1Dw7kAzNsU3y8elGIjLnUSUNMtLg=" crossorigin="anonymous"></script>
 </head>
 
 <body>
     <div id="input-area">
         <p id="file-selector-section">
+            <input type="checkbox" id="merge-assets" checked="true"> Merge assets representing the same links into a
+            single node.
+            <br>
             <input type="file" id="file-selector" accept=".json">
         </p>
         <div>
@@ -39,7 +46,8 @@
             <p>
                 The simulation will be slow to start, after a short time of it back solving node positions
                 the graph will lock and then it should be highly responsive.
-                Feel free to provide feedback or view the source <a href="https://github.com/Earthmark/NeosStatbox" target="_blank">here</a>,
+                Feel free to provide feedback or view the source <a href="https://github.com/Earthmark/NeosStatbox"
+                    target="_blank">here</a>,
                 if performance issues persist please log an issue.
             </p>
             <p>
@@ -71,6 +79,7 @@
         const showLabels = document.getElementById('show-labels');
         const showMime = document.getElementById('show-mime');
         const disableDrag = document.getElementById('disable-drag');
+        const mergeAssets = document.getElementById('merge-assets');
 
         const fileSelector = document.getElementById('file-selector');
         fileSelector.addEventListener('change', changeEvent => {
@@ -88,44 +97,79 @@
                     "23e7ad7cb0a5a4cf75e07c9e0848b1eb06bba15e8fa9b8cb0579fc823c532927": true
                 };
 
+                // Navigation modes
+                // culling modes
+                //  clusters
+                // merge strong components
+                // merge strong assets
+                // better size collectively
+                // copy asset id on click (or have button)
+
                 // fold result into a node tree.
-                const nodes = {};
-                const links = [];
-                raw.forEach(record => {
-                    nodes[record.id] =
+                const records = {};
+                const assets = {};
+                raw.forEach(rawRecord => {
+                    const record = records[rawRecord.id] =
                     {
-                        id: record.id,
-                        label: (record.path ? record.path + "\\" : "") + record.name,
-                        type: record.recordType,
-                        x: 0,
-                        y: 0,
-                        size: 5
+                        id: rawRecord.id,
+                        label: (rawRecord.path ? rawRecord.path + "\\" : "") + rawRecord.name,
+                        type: rawRecord.recordType,
+                        size: 5,
                     };
 
-                    record.neosDBmanifest.forEach(asset => {
+                    rawRecord.neosDBmanifest.forEach(rawAsset => {
                         // Omit the core font list, they connect to anything with text.
                         // Really you'll never get rid of these, and they make the graph
                         // more difficult to understand.
-                        if (coreFontList[asset.hash]) {
+                        if (coreFontList[rawAsset.hash]) {
                             return;
                         }
 
-                        if (nodes[asset.hash] === undefined) {
-                            nodes[asset.hash] = {
-                                id: asset.hash,
-                                label: `${asset.hash} ${asset.bytes} bytes`,
+                        var asset = assets[rawAsset.hash];
+                        if (asset === undefined) {
+                            asset = assets[rawAsset.hash] = {
+                                id: rawAsset.hash,
+                                label: `${rawAsset.hash} ${rawAsset.bytes} bytes`,
                                 type: "asset",
-                                x: 0,
-                                y: 0,
-                                size: asset.bytes > 0 ? Math.log2(asset.bytes) : 1,
+                                size: rawAsset.bytes,
+                                records: []
                             };
                         }
-                        links.push({
-                            source: record.id,
-                            target: asset.hash
-                        });
+                        // Because we go through records in sequence,
+                        // we can build a strong key out of the order the nodes are referenced.
+                        asset.records.push(record.id);
                     });
                 });
+
+                var nodes = [];
+                var links = [];
+
+                if (mergeAssets.checked) {
+                    nodes = Object.values(records);
+
+                    // for each record, find all assets where the list of assets are similar.
+                    const groups = _.groupBy(assets, 'records');
+                    for (const aggregate in groups) {
+                        const group = groups[aggregate];
+                        const size = group.reduce((c, g) => c + g.size, 0);
+                        const node = {
+                            id: group.reduce((a, v) => a != "" ? a + "," + v.label : v.label, ""),
+                            label: `${group.length} nodes, ${size} bytes total<br>` + group.reduce((a, v) => a != "" ? a + "<br>" + v.label : v.label, ""),
+                            size,
+                            type: "asset"
+                        };
+                        nodes.push(node);
+
+                        group[0].records.forEach(r => links.push({
+                            source: r,
+                            target: node.id
+                        }));
+                    }
+                }
+                else {
+                    nodes = Object.values(records).concat(Object.values(assets));
+                    links = nodes.flatMap(n => n.assets ? n.assets.map(a => ({ source: n, target: a })) : []);
+                }
 
                 const graph = {
                     nodes: Object.values(nodes),
@@ -156,7 +200,7 @@
                         }
                         return n.label;
                     }).nodeColor(n => mapColor(n.type))
-                    .nodeVal(n => n.size)
+                    .nodeVal(n => n.size > 0 ? Math.log2(n.size) : 1)
                     .enableNodeDrag(false);
 
                 // If we get to this point, we loaded the graph successfully.
