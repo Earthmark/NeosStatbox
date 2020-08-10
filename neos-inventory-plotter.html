@@ -156,7 +156,6 @@
                     for (const aggregate in groups) {
                         const group = groups[aggregate];
                         const size = group.reduce((c, g) => c + g.size, 0);
-                        console.log(size);
                         const node = {
                             id: group.reduce((a, v) => a != "" ? a + "," + v.label : v.label, ""),
                             label: `${group.length} nodes, ${size} bytes total<br>` + group.reduce((a, v) => a != "" ? a + "<br>" + v.label : v.label, ""),
