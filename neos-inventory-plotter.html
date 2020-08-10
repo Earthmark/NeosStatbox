@@ -22,11 +22,12 @@
         body {
             margin: 0;
             font-family: 'Roboto', sans-serif;
-            background-color: #000011;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.66.6/dist/3d-force-graph.min.js"
         integrity="sha256-mPYIN3z7FgzLzvsTfCOeGjry8/LlPRZaew4NzxHzh7E=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/force-graph@1.32.3/dist/force-graph.min.js"
+        integrity="sha256-80BJSwinPge2ZESMtr6xCAz/a+dQT26DuDFbnC3AoU8=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.19/lodash.min.js"
         integrity="sha256-Jvh9+A4HNbbWsWl1Dw7kAzNsU3y8elGIjLnUSUNMtLg=" crossorigin="anonymous"></script>
 </head>
@@ -34,11 +35,14 @@
 <body>
     <div id="input-area">
         <p id="file-selector-section">
+            <input type="checkbox" id="3d" checked="false"> Use 3D instead of 2D rendering.
+            <br>
+            <input type="checkbox" id="allow-dragging" checked="false"> Allow Dragging (this may be expensive).
+            <br>
             <input type="checkbox" id="merge-assets" checked="true"> Merge assets representing the same links into a
             single node.
             <br>
             <input type="number" id="log-power" value="100"> The log power for the sizes of the nodes.
-            single node.
             <br>
             <input type="file" id="file-selector" accept=".json">
         </p>
@@ -81,9 +85,6 @@
     <script>
         const showLabels = document.getElementById('show-labels');
         const showMime = document.getElementById('show-mime');
-        const disableDrag = document.getElementById('disable-drag');
-        const mergeAssets = document.getElementById('merge-assets');
-        const logPower = document.getElementById('log-power');
 
         const fileSelector = document.getElementById('file-selector');
         fileSelector.addEventListener('change', changeEvent => {
@@ -148,7 +149,7 @@
                 var nodes = [];
                 var links = [];
 
-                if (mergeAssets.checked) {
+                if (document.getElementById('merge-assets').checked) {
                     nodes = Object.values(records);
 
                     // for each record, find all assets where the list of assets are similar.
@@ -184,20 +185,20 @@
                 function mapColor(type) {
                     switch (type) {
                         case "asset":
-                            return "f5b84e";
+                            return "#f5b84e";
                         case "world":
-                            return "4e59f5";
+                            return "#4e59f5";
                         case "texture":
-                            return "c64ef5";
+                            return "#c64ef5";
                         case "object":
-                            return "f54e4e";
+                            return "#f54e4e";
                     }
-                    return "ffffff";
+                    return "#ffffff";
                 }
 
-                var logVal = parseFloat(logPower.value);
+                var logVal = parseFloat(document.getElementById('log-power').value);
 
-                const myGraph = ForceGraph3D({
+                const myGraph = (document.getElementById('3d').checked ? ForceGraph3D : ForceGraph)({
                     controlType: "fly"
                 });
                 const graphInstance = myGraph(document.getElementById('graph-container'))
@@ -207,8 +208,11 @@
                         }
                         return n.label;
                     }).nodeColor(n => mapColor(n.type))
-                    .nodeVal(n => n.size > 0 ? Math.log(n.size) / Math.log(logVal) : 1)
-                    .enableNodeDrag(false);
+                    .nodeVal(n => {
+                        const result = n.size > 0 ? Math.log(n.size) / Math.log(logVal) : 1;
+                        return result;
+                    })
+                    .enableNodeDrag(document.getElementById('allow-dragging').checked);
 
                 // If we get to this point, we loaded the graph successfully.
                 // Disable the selector as a signal for that.
