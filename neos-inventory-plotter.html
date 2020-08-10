@@ -120,6 +120,7 @@
                         label: (rawRecord.path ? rawRecord.path + "\\" : "") + rawRecord.name,
                         type: rawRecord.recordType,
                         size: 5,
+                        assets: [],
                     };
 
                     rawRecord.neosDBmanifest.forEach(rawAsset => {
@@ -143,6 +144,7 @@
                         // Because we go through records in sequence,
                         // we can build a strong key out of the order the nodes are referenced.
                         asset.records.push(record.id);
+                        record.assets.push(asset);
                     });
                 });
 
@@ -173,7 +175,7 @@
                 }
                 else {
                     nodes = Object.values(records).concat(Object.values(assets));
-                    links = nodes.flatMap(n => n.assets ? n.assets.map(a => ({ source: n, target: a })) : []);
+                    links = nodes.flatMap(n => n.assets ? n.assets.map(a => ({ source: n.id, target: a.id })) : []);
                 }
 
                 const graph = {
@@ -202,7 +204,8 @@
                     controlType: "fly"
                 });
                 const graphInstance = myGraph(document.getElementById('graph-container'))
-                    .graphData(graph).nodeLabel(n => {
+                    .graphData(graph)
+                    .nodeLabel(n => {
                         if (!showLabels.checked) {
                             return;
                         }
