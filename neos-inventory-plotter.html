@@ -21,6 +21,7 @@
 
         body {
             margin: 0;
+            background-color: #000011;
             font-family: 'Roboto', sans-serif;
         }
     </style>
@@ -35,20 +36,20 @@
 <body>
     <div id="input-area">
         <p id="file-selector-section">
+            <input type="checkbox" id="3d" checked="false"> Use 3D instead of 2D rendering (2D can be easier to view).
+            <br>
             <select id="control-type">
                 <option value="trackball">Trackball</option>
                 <option value="orbit">Orbit</option>
                 <option value="fly">Fly</option>
-            </select> The controls to use in 3D.
+            </select> The controls to use in 3D, unused if in 2D.
             <br>
-            <input type="checkbox" id="3d" checked="false"> Use 3D instead of 2D rendering.
-            <br>
-            <input type="checkbox" id="allow-dragging" checked="false"> Allow Dragging (this may be expensive).
+            <input type="checkbox" id="allow-dragging" checked="false"> Allow Dragging (this may be slow).
             <br>
             <input type="checkbox" id="merge-assets" checked="true"> Merge assets representing the same links into a
-            single node.
+            single node (This will dramatically increase FPS, but is less pretty).
             <br>
-            <input type="number" id="log-power" value="100"> The log power for the sizes of the nodes.
+            <input type="number" id="log-power" value="10"> The log power for the sizes of the nodes.
             <br>
             <input type="file" id="file-selector" accept=".json">
         </p>
@@ -220,6 +221,7 @@
                         }
                         return n.label;
                     }).nodeColor(n => mapColor(n.type))
+                    .linkColor(() => 'rgba(255,255,255,0.2)')
                     .nodeVal(n => {
                         const result = n.size > 0 ? Math.log(n.size) / Math.log(logVal) : 1;
                         return result;
